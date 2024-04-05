@@ -2,10 +2,15 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
 
 class MessagesPage extends StatelessWidget{
   MessagesPage({super.key});
+
+
+
+
 
 
   var users = ['Kevin', 'Breno', 'Teste', 'Ana', 'Paula', 'Marina', 'Carla', 'Julia', 'Bianca', 'Beatriz', 'Carla', 'Julia', 'Bianca', 'Beatriz'];
@@ -13,6 +18,15 @@ class MessagesPage extends StatelessWidget{
 
   @override
   Widget build(BuildContext context){
+
+    final socket = IO.io('http://localhost:3000', <String, dynamic>{
+      'transports': ['websocket'],
+    });
+
+    socket.onConnect((_) {
+      print('connect');
+      socket.emit('msg', 'test');
+    });
 
     return Scaffold(
       appBar: AppBar(

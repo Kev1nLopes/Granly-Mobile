@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+class Mensagem{
+  final int authorId;
+  final String message;
+
+
+  Mensagem({required this.authorId, required this.message});
+}
+
+
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -11,26 +20,41 @@ class ChatPage extends StatefulWidget {
   }
 }
 
+
+
+
 class ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   String inputMessage = "";
 
-  List<String> messages = [
-    'Você é mais forte do que pensa e mais capaz do que imagina. Confie na sua força. Bom dia!',
-    'Se as coisas na sua vida parecem um pouco lentas, talvez seja a vida te dizendo que você está indo rápido demais. Respire fundo, tenha paciência e saiba que tudo tem o seu tempo. Bom dia!',
-    'Você é mais forte do que pensa e mais capaz do que imagina. Confie na sua força. Bom dia!',
-    'Bom dia! As melhores coisas ainda estão por vir! Tenha fé!',
-    'Que o seu dia seja marcado por novas conquistas e objetivos concluídos! Uma excelente manhã para todos!',
-    'Que a jornada de hoje venha acompanhada de muitas vitórias.',
-    'Bom dia! Peça para receber, busque para encontrar, sonhe para conquistar.',
-    'Acreditar em si mesmo é um ato de amor-próprio. Um dia cheio de conquistas é o que desejo para você hoje.',
-    'Foco, força e coragem para que hoje seja um dia marcado por metas concluídas. Bom dia!',
-    'Tenha fé em Deus e amor no coração para cumprir todos os objetivos de hoje! Um bom dia!',
+  List<Mensagem> messages = [
+    Mensagem(authorId: 1, message: 'Bom dia'),
+    Mensagem(authorId: 2, message: 'Bom dia'),
+    Mensagem(authorId: 1, message: 'Ta bem ?'),
+    Mensagem(authorId: 2, message: 'To sim!'),
+    Mensagem(authorId: 2, message: 'E você ?'),
+    Mensagem(authorId: 1, message: 'To bem'),
+    Mensagem(authorId: 1, message: 'Vamos fazer algo hoje ?'),
+    Mensagem(authorId: 2, message: 'Hoje eu não posso.'),
+    Mensagem(authorId: 2, message: 'Amanhã eu to livre'),
+    Mensagem(authorId: 1, message: 'Amanhã eu nã possoo :( '),
+    Mensagem(authorId: 1, message: 'Ta díficil'),
+    Mensagem(authorId: 1, message: 'Olha '),
+    Mensagem(authorId: 1, message: 'Precisamos falar sobre o grêmio '),
+    Mensagem(authorId: 1, message: 'Time ta uma merda'),
+    Mensagem(authorId: 1, message: 'JP galvão não faz nada '),
+    Mensagem(authorId: 1, message: 'Meu vô jogaria melhor '),
+    Mensagem(authorId: 1, message: 'é foda '),
+    Mensagem(authorId: 1, message: 'Sempre o grêmio '),
+    Mensagem(authorId: 2, message: 'Time fudido'),
+    Mensagem(authorId: 2, message: 'Mas tem pior'),
+    Mensagem(authorId: 2, message: 'Não da pra reclamar')
+
   ];
 
   void newMessage() {
     setState(() {
-      messages.add(_controller.text);
+      messages.add(Mensagem(authorId: 2, message: _controller.text));
       _controller.clear();
     });
   }
@@ -60,17 +84,12 @@ class ChatPageState extends State<ChatPage> {
           backgroundColor: Colors.grey[50],
         ),
         body: Container(
-          height: MediaQuery.of(context).size.height - 200,
+          height: MediaQuery.of(context).size.height - 160,
           width: MediaQuery.of(context).size.width,
           color: Colors.green[50],
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                  children: messages
-                      .map((message) => Message(message: message, fontSize: 12))
-                      .toList()),
-            ),
+          child:  ListView(
+            children: messages.map((msg) =>
+                Message(mensagem: msg, sizeFont: 12, AuthUserId: 1,)).toList(),
           ),
         ),
         bottomNavigationBar: BottomAppBar(
@@ -106,10 +125,11 @@ class ChatPageState extends State<ChatPage> {
 }
 
 class Message extends StatelessWidget {
-  final String message;
-  final double fontSize;
+  final Mensagem mensagem;
+  final int AuthUserId;
+  final double sizeFont;
   final Key? key;
-  const Message({Key? this.key, required this.message, required this.fontSize});
+  const Message({Key? this.key, required this.mensagem, required this.sizeFont, required this.AuthUserId});
 
   @override
   Widget build(BuildContext context) {
@@ -120,19 +140,22 @@ class Message extends StatelessWidget {
           height: 5,
         ),
         Align(
-          alignment: Alignment.centerRight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              color: Colors.blue,
-              child: Center(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: Text(
-                    message.toString(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 20),
+          alignment: AuthUserId == mensagem.authorId ? Alignment.topLeft : Alignment.topRight,
+          child: Container(
+          width: MediaQuery.of(context).size.width * 0.48,
+          child:  ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                color: AuthUserId == mensagem.authorId ? Colors.blue : Colors.lightGreen,
+                child: Center(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    child: Text(
+                      mensagem.message.toString(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: sizeFont),
+                    ),
                   ),
                 ),
               ),
