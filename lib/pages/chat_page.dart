@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
 
 class Mensagem{
   final int authorId;
@@ -52,21 +55,35 @@ class ChatPageState extends State<ChatPage> {
 
   ];
 
-  void newMessage() {
-    setState(() {
-      messages.add(Mensagem(authorId: 2, message: _controller.text));
-      _controller.clear();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
 
+    IO.Socket socket = IO.io('ws://localhost:3000');
+
+    socket.onConnect((_) {
+      print('connect');
+      socket.emit('msg', 'test');
+    });
+
+    socket.on('msg', (data) => print(data));
+    socket.on('cara', (data) => print(data));
+
+    void newMessage(){
+      setState(() {
+        socket.emit('teste', _controller.text);
+        messages.add(Mensagem(authorId: 2, message: _controller.text));
+        _controller.clear();
+      });
+
+    }
+
     final String? receiver = ModalRoute.of(context)?.settings.arguments as String?;
 
     return Scaffold(
         appBar: AppBar(
+          toolbarHeight: MediaQuery.of(context).size.height * 0.09,
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back,
@@ -83,44 +100,29 @@ class ChatPageState extends State<ChatPage> {
           ],
           backgroundColor: Colors.grey[50],
         ),
-        body: Container(
-          height: MediaQuery.of(context).size.height - 160,
-          width: MediaQuery.of(context).size.width,
-          color: Colors.green[50],
-          child:  ListView(
-            children: messages.map((msg) =>
-                Message(mensagem: msg, sizeFont: 12, AuthUserId: 1,)).toList(),
-          ),
-        ),
-        bottomNavigationBar: BottomAppBar(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Digite aqui...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: newMessage,
-                 child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue
-                  ),
-                  child: IconButton(icon: const Icon(Icons.send), onPressed: newMessage, style: ButtonStyle(iconColor: MaterialStateProperty.all<Color>(Colors.white)),)), 
-                )
-              ],
+        body: Column(
+          children: [
+            Expanded(
+              child:  ListView.builder(
+                itemCount: messages.length,
+                itemBuilder: (BuildContext context, int index){
+                  final msg = messages[index];
+
+                  return Message(mensagem: msg, sizeFont: 12, AuthUserId: 1, isLastMessage: messages.length - 1 == index);
+                },
+              ),
             ),
-          ),
-        ));
+            Container(
+             child: TextField(
+               decoration: InputDecoration(
+                 labelText: 'Mensagem',
+                 border: OutlineInputBorder()
+               ),
+             ),
+            )
+          ],
+        ),
+    );
   }
 }
 
@@ -129,7 +131,8 @@ class Message extends StatelessWidget {
   final int AuthUserId;
   final double sizeFont;
   final Key? key;
-  const Message({Key? this.key, required this.mensagem, required this.sizeFont, required this.AuthUserId});
+  final bool isLastMessage;
+  const Message({Key? this.key, required this.mensagem, required this.sizeFont, required this.AuthUserId, required this.isLastMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +146,7 @@ class Message extends StatelessWidget {
           alignment: AuthUserId == mensagem.authorId ? Alignment.topLeft : Alignment.topRight,
           child: Container(
           width: MediaQuery.of(context).size.width * 0.48,
+          margin: EdgeInsets.only(bottom: isLastMessage ? 10 : 0),
           child:  ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Container(
