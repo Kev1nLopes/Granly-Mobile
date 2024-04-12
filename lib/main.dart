@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wpp/controllers/theme_controller.dart';
 import 'package:wpp/pages/chat_page.dart';
+import 'package:wpp/pages/email_page.dart';
 import 'package:wpp/pages/login_page.dart';
 import 'package:wpp/pages/messages_page.dart';
 
@@ -19,11 +20,12 @@ class MyApp extends StatelessWidget {
       return MaterialApp(
         theme: ThemeData(brightness: ThemeController.instance.switchColor ? Brightness.dark : Brightness.light),
         debugShowCheckedModeBanner: false,
-        initialRoute: '/login',
+        initialRoute: '/',
         routes: {
+          '/': (context ) => EmailPage(),
           '/chat': (context ) => const ChatPage(),
           '/login': (context) =>  LoginPage(),
-          '/home': (context) => MessagesPage(),
+          '/home': (context) =>  MessagePage(),
         },
       );
     } );

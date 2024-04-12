@@ -3,11 +3,31 @@
 
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:http/http.dart' as http;
+
+class MessagePage extends StatefulWidget {
+  const MessagePage({Key? key}) : super(key: key); // Correção no construtor
+
+  @override
+  State<MessagePage> createState() {
+    return MessagePageState();
+  }
+}
 
 
-class MessagesPage extends StatelessWidget{
-  MessagesPage({super.key});
+
+class MessagePageState extends State<MessagePage>{
   var users = ['Kevin', 'Breno', 'Teste', 'Ana', 'Paula', 'Marina', 'Carla', 'Julia', 'Bianca', 'Beatriz', 'Carla', 'Julia', 'Bianca', 'Beatriz'];
+
+
+   Future<void> fetchApi() async {
+     final url = Uri.https('https://meowfacts.herokuapp.com/');
+      var response = await http.get(url);
+      print(response.body);
+
+   }
+
+
 
 
   @override
@@ -15,14 +35,13 @@ class MessagesPage extends StatelessWidget{
 
 
 
-
-
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Granlys Chat"),
          actions: <Widget>[
-          IconButton(onPressed: () => {}, icon: const Icon(Icons.search)),
+          IconButton(onPressed: () => {
+
+          }, icon: const Icon(Icons.search)),
           IconButton(onPressed: () => {}, icon: const Icon(Icons.more_vert_rounded))
         ],
       ),

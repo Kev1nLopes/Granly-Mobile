@@ -9,51 +9,114 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Identifique-se',
-                style: TextStyle(fontSize: 32),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              TextField(
-                decoration: const InputDecoration(
-                    labelText: 'Username', border: OutlineInputBorder()),
-                onChanged: (value) {
-                  _username = value;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                    labelText: 'Email', border: OutlineInputBorder()),
-                onChanged: (value) {
-                  _email = value;
-                },
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacementNamed('/home');
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+
+            child: Column(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.8,
                   child: const Text(
-                    'Acessar',
-                    style: TextStyle(color: Colors.white),
-                  ))
-            ],
+                    'Um código de validação foi enviado para o seu email "email". Por favor, insira-o abaixo para acessar sua conta.',
+                    style: TextStyle(fontSize: 22),
+                  ),
+                ),
+                SizedBox(height: 30,),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+
+                    Container(
+                      width: 50,
+                      height: 80,
+                      child: TextField(
+                          maxLength: 1,
+                          decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "0",
+                              hintStyle: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                              border: OutlineInputBorder(
+                              )
+                          )
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Container(
+                      width: 50,
+                      height: 80,
+                      child: TextField(
+                          maxLength: 1,
+                          decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "0",
+                              hintStyle: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                              border: OutlineInputBorder(
+                              )
+                          )
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Container(
+                      width: 50,
+                      height: 80,
+                      child: TextField(
+                          maxLength: 1,
+                          decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "0",
+                              hintStyle: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                              border: OutlineInputBorder(
+                              )
+                          )
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Container(
+                      width: 50,
+                      height: 80,
+                      child: TextField(
+                          maxLength: 1,
+                          decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "0",
+                              hintStyle: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                              border: OutlineInputBorder(
+                              )
+                          )
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+
+                  ],
+                ),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        minimumSize: Size(MediaQuery.of(context).size.width * 0.4, 40)
+                    ),
+                    child: const Text(
+                      'Acessar',
+                      style: TextStyle(color: Colors.white),
+                    ))
+              ],
+            ),
           ),
         ),
       ),
