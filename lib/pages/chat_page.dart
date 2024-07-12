@@ -1,17 +1,15 @@
+import 'dart:ffi';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-
-
-class Mensagem{
-  final int authorId;
-  final String message;
-
-
-  Mensagem({required this.authorId, required this.message});
-}
-
+import 'package:provider/provider.dart';
+import 'package:wpp/controllers/chat_controller.dart';
+import 'package:wpp/controllers/user_controller.dart';
+import 'package:wpp/models/message.model.dart';
+import 'package:wpp/utils/app.environment.dart';
+import 'package:wpp/utils/dio.interceptor.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -23,119 +21,208 @@ class ChatPage extends StatefulWidget {
   }
 }
 
-
-
-
 class ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   String inputMessage = "";
 
-  List<Mensagem> messages = [
-    Mensagem(authorId: 1, message: 'Bom dia'),
-    Mensagem(authorId: 2, message: 'Bom dia'),
-    Mensagem(authorId: 1, message: 'Ta bem ?'),
-    Mensagem(authorId: 2, message: 'To sim!'),
-    Mensagem(authorId: 2, message: 'E você ?'),
-    Mensagem(authorId: 1, message: 'To bem'),
-    Mensagem(authorId: 1, message: 'Vamos fazer algo hoje ?'),
-    Mensagem(authorId: 2, message: 'Hoje eu não posso.'),
-    Mensagem(authorId: 2, message: 'Amanhã eu to livre'),
-    Mensagem(authorId: 1, message: 'Amanhã eu nã possoo :( '),
-    Mensagem(authorId: 1, message: 'Ta díficil'),
-    Mensagem(authorId: 1, message: 'Olha '),
-    Mensagem(authorId: 1, message: 'Precisamos falar sobre o grêmio '),
-    Mensagem(authorId: 1, message: 'Time ta uma merda'),
-    Mensagem(authorId: 1, message: 'JP galvão não faz nada '),
-    Mensagem(authorId: 1, message: 'Meu vô jogaria melhor '),
-    Mensagem(authorId: 1, message: 'é foda '),
-    Mensagem(authorId: 1, message: 'Sempre o grêmio '),
-    Mensagem(authorId: 2, message: 'Time fudido'),
-    Mensagem(authorId: 2, message: 'Mas tem pior'),
-    Mensagem(authorId: 2, message: 'Não da pra reclamar')
+  List<Message> messages = [];
 
-  ];
+  Map<String, dynamic>? receiver;
 
+  Dio dio = DioClient().dio;
+
+  late UserController UserContext;
+  late ChatController chatContext;
+
+  fetchMessages(int id) async {
+   
+    try {
+      print('------------------ ${id}');
+      var response = await dio.get('${Enviroment.baseUrl}/messages/$id',
+          options: Options(
+              headers: {'Authorization': 'Bearer ${UserContext.user?.token}'}));
+
+      if (response.statusCode == 200) {
+        chatContext.resetMessages(receiver!['signatario']);
+        response.data.forEach((key, value) {
+          if (value is List) {
+            print(value.length);
+            value.forEach((element) {
+              
+             
+              // ArrayMessages.add(Message.fromJson(element));
+              Message message = Message.fromJson(element);
+              
+              if(receiver!['signatario'] != null){
+                chatContext.NewSocketMessage(receiver!['signatario'], message);
+
+              }
+            });
+          }
+        });
+        
+      }
+      // Atualize a lista de mensagens aqui, se necessário
+    } on DioException catch (e) {
+      print(e.message);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print("Entrou na chat page");
+
+  }
+
+  void newMessage(String message) async {
+    print(message);
+
+    try {
+      print(receiver);
+      var response = await dio.post<Map<String, dynamic>>(
+          '${Enviroment.baseUrl}/messages',
+          data: {'receiver_id': chatContext.currentChat, 'message': message},
+          options: Options(
+              headers: {'Authorization': 'Bearer ${UserContext.user?.token}'}));
+
+      if (response.data != null) {
+        var data = response.data!['data'];
+        var message = Message.fromJson(data);
+        chatContext.NewSocketMessage(receiver!['signatario'], message);
+      } else {
+        print('Response data is null');
+      }
+    } on DioException catch (e) {
+      print(e.response?.data);
+    }
+
+    
+  }
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
 
-    IO.Socket socket = IO.io('ws://localhost:3000');
+    chatContext = context.watch<ChatController>();
+    UserContext = context.watch<UserController>();
 
-    socket.onConnect((_) {
-      print('connect');
-      socket.emit('msg', 'test');
-    });
-
-    socket.on('msg', (data) => print(data));
-    socket.on('cara', (data) => print(data));
-
-    void newMessage(){
-      setState(() {
-        socket.emit('teste', _controller.text);
-        messages.add(Mensagem(authorId: 2, message: _controller.text));
-        _controller.clear();
-      });
-
-    }
-
-    final String? receiver = ModalRoute.of(context)?.settings.arguments as String?;
-
+    
+    receiver = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+    // fetchMessages(chatContext.currentChat); 
+      
+      
+    
+    
     return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          title: Text(receiver ?? ' '),
-          actions: <Widget>[
-            IconButton(onPressed: () => {}, icon: const Icon(Icons.search)),
-            IconButton(onPressed: () => {}, icon: const Icon(Icons.more_vert_rounded))
-          ],
-          backgroundColor: Colors.grey[50],
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child:  ListView.builder(
-                itemCount: messages.length,
-                itemBuilder: (BuildContext context, int index){
-                  final msg = messages[index];
-
-                  return Message(mensagem: msg, sizeFont: 12, AuthUserId: 1, isLastMessage: messages.length - 1 == index);
-                },
+      body: SafeArea(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                height: 80,
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.arrow_back),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          Text(
+                            receiver!['signatario'] ?? ' ',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ],
+                      ),
+                      Align(
+                        child: IconButton(
+                          icon: Icon(Icons.more_vert),
+                          onPressed: () {},
+                        ),
+                      )
+                    ]),
               ),
-            ),
-            Container(
-             child: TextField(
-               decoration: InputDecoration(
-                 labelText: 'Mensagem',
-                 border: OutlineInputBorder()
-               ),
-             ),
-            )
-          ],
+              Expanded(
+                child: ListView.builder(
+                  itemCount: chatContext.messages[receiver!['signatario']]!.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final msg =  chatContext.messages[receiver!['signatario']]![index];
+                    return MessageArea(
+                      mensagem: msg,
+                      userId: UserContext.user!.user!.id!,
+                      isLastMessage: index == chatContext.messages[receiver!['signatario']]!.length - 1,
+                    );
+                  },
+                ),
+              ),
+              TextFieldArea(context),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Padding TextFieldArea(BuildContext context) {
+    TextEditingController messageController = TextEditingController();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: TextField(
+              controller: messageController,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
+          ),
+          Container(
+            width: 60.0, // largura do círculo
+            height: 60.0, // altura do círculo
+            decoration: const BoxDecoration(
+              color: Colors.blue, // cor do círculo
+              shape: BoxShape.circle, // forma do contêiner como círculo
+            ),
+            child: IconButton(
+              icon: Icon(Icons.send, color: Colors.white),
+              onPressed: () {
+                newMessage(messageController.text);
+                messageController.clear();
+                // sua ação aqui
+              },
+            ),
+          )
+        ],
+      ),
     );
   }
 }
 
-class Message extends StatelessWidget {
-  final Mensagem mensagem;
-  final int AuthUserId;
-  final double sizeFont;
-  final Key? key;
+class MessageArea extends StatelessWidget {
+  final Message mensagem;
+  final int userId;
   final bool isLastMessage;
-  const Message({Key? this.key, required this.mensagem, required this.sizeFont, required this.AuthUserId, required this.isLastMessage});
+
+  MessageArea({
+    super.key,
+    required Message this.mensagem,
+    required int this.userId,
+    required bool this.isLastMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
+
+    print(userId);
+    print(isLastMessage);
+    print(mensagem.message!);
+
     // TODO: implement build
     return Column(
       children: [
@@ -143,22 +230,26 @@ class Message extends StatelessWidget {
           height: 5,
         ),
         Align(
-          alignment: AuthUserId == mensagem.authorId ? Alignment.topLeft : Alignment.topRight,
+          alignment: userId == mensagem.author!.id!
+              ? Alignment.topLeft
+              : Alignment.topRight,
           child: Container(
-          width: MediaQuery.of(context).size.width * 0.48,
-          margin: EdgeInsets.only(bottom: isLastMessage ? 10 : 0),
-          child:  ClipRRect(
+            width: MediaQuery.of(context).size.width * 0.48,
+            margin: EdgeInsets.only(bottom: isLastMessage ? 10 : 0),
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                color: AuthUserId == mensagem.authorId ? Colors.blue : Colors.lightGreen,
+                color: (userId != null) && userId == mensagem.author!.id!
+                    ? Colors.blue
+                    : Colors.lightGreen,
                 child: Center(
                   child: Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: Text(
-                      mensagem.message.toString(),
+                      mensagem.message!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: sizeFont),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
                 ),
